@@ -7,6 +7,6 @@ export class AppController {
 
   @Get()
   apiStatus(): string {
-    return this.appService.api();
+    return this.appService.status();
   }
 }

@@ -9,7 +9,7 @@ export class AppService {
     private configService: ConfigService
   ) { }
 
-  api(): string {
+  status(): string {
     const rocket = emoji.get('rocket');
     const port = this.configService.get('PORT') || 3000;
     return `CTF API ${rocket} ${port}`;
