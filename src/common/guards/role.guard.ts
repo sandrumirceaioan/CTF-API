@@ -1,5 +1,5 @@
-import {CanActivate, ExecutionContext, Injectable} from '@nestjs/common';
-import {Reflector} from '@nestjs/core';
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -18,8 +18,8 @@ export class RolesGuard implements CanActivate {
 
   matchRoles(role, userRole) {
     if (userRole.role.toLowerCase().trim() === role.toLowerCase().trim()) {
-      return true
+      return true;
     }
-    return false
+    return false;
   }
 }

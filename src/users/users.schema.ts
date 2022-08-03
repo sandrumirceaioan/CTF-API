@@ -5,12 +5,13 @@ export type UserDocument = User & Document;
 
 @Schema()
 export class User {
-  @Prop()
-  _id: string;
-
-  @ApiProperty({ example: 'example@email.com' })
+  @ApiProperty({ example: 'user@email.com' })
   @Prop({ required: true, unique: true })
   email: string;
+
+  @ApiProperty({ example: '12345' })
+  @Prop({ required: true })
+  password: string;
 
   @ApiProperty({ example: 'John' })
   @Prop({ required: true })
@@ -20,16 +21,16 @@ export class User {
   @Prop({ required: true })
   lastName: string;
 
-  @ApiProperty({ example: 'TODO !!!' })
+  @ApiProperty({ example: '1987-06-24' })
   @Prop({ required: true })
   birthDate: Date;
 
-  @ApiProperty({ example: 'male/female' })
+  @ApiProperty({ example: 'male' })
   @Prop({ required: true })
   gender: 'male' | 'female';
 
-  @ApiProperty()
-  @Prop({ required: true })
+  @ApiProperty({ example: 'user' })
+  @Prop()
   role: 'admin' | 'user';
 
   @Prop()
@@ -37,9 +38,6 @@ export class User {
 
   @Prop()
   photo: string;
-
-  @Prop({ required: true })
-  password: string;
 
   @Prop()
   loggedAt: Date;

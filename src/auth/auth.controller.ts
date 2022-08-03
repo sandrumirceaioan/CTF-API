@@ -1,13 +1,13 @@
-import { Body, Controller, Get, HttpException, HttpStatus, Post, Request, SetMetadata, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiBody, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { Body, Controller, Get, HttpException, HttpStatus, Post, Req, Request, SetMetadata, UseGuards, Header, Param, Head, Headers, Query } from '@nestjs/common';
+import { ApiBody, ApiOperation, ApiResponse, ApiTags, ApiUnauthorizedResponse, ApiHeader, ApiParam, ApiBearerAuth, ApiHeaders, ApiQuery } from "@nestjs/swagger";
 
 import { Public } from '../common/decorators/public.decorators';
 import { User } from '../users/users.schema';
 import { AuthService } from './auth.service';
-import { AuthGuard } from "@nestjs/passport";
 import { authSwagger } from "../auth/auth.swagger";
 import { isEmpty } from 'underscore';
-
+import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
+import { HeaderObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -17,66 +17,56 @@ export class AuthController {
     ) {
     }
 
+    // login
     @Public()
-    @ApiBody(authSwagger.req.login_req)
-    @ApiResponse(authSwagger.res.login_res)
+    @ApiBody(authSwagger.login.req)
+    @ApiResponse(authSwagger.login.res)
+    @ApiOperation({
+        summary: ' - login user',
+        description: '<b>NOTE</b>: Email and password are required.'
+    })
     @Post('/login')
-    async login(@Body() user: User) {
+    async login(
+        @Body() user: User
+    ) {
         if (!user || isEmpty(user)) throw new HttpException('Credentials missing', HttpStatus.BAD_REQUEST);
         if (!user.email) throw new HttpException('Email is required', HttpStatus.BAD_REQUEST);
         if (!user.password) throw new HttpException('Password is required', HttpStatus.BAD_REQUEST);
         return await this.authService.login(user);
     }
 
-    // @ApiResponse(swaggerUsersDoc.res.user_get_only_res)
-    // @ApiBody(swaggerUsersDoc.req.auth_reg_post_req)
-    // @SetMetadata('roles', 'admin')
-    // @ApiOperation(swaggerUsersDoc.req.onlyAdmin)
-    // @UseGuards(AuthGuard('jwt'))
-    // @ApiBearerAuth('JWT')
-    // @Post('/reg')
-    // async registere(
-    //     @Body() user: User,
-    //     @Request() req,
-    // ) {
-    //     return await this.operationsService.post_reg(user, req)
-    // }
+    // register
+    @Public()
+    @ApiBody(authSwagger.register.req)
+    @ApiResponse(authSwagger.register.res)
+    @ApiOperation({
+        summary: ' - register account',
+        description: '<b>NOTE</b>: Let\'s discuss which roles can use this route.'
+    })
+    @Post('/register')
+    async register(
+        @Body() user: User
+    ) {
+        return await this.authService.register(user);
+    }
 
-    // @SetMetadata('roles', 'admin')
-    // @UseGuards(AuthGuard('jwt'))
-    // @ApiBearerAuth('JWT')
-    // @Get('/check-token')
-    // async checkToken(
-    //     @Request() req: any
-    // ) {
-    //     return await this.authService.getUserById(req.user.id)
-    // }
-
-    // @Public()
-    // @Post('/login')
-    // async login(@Body() body) {
-    //     console.log('AUTH');
-    //     if (!body || isEmpty(body)) throw new MessageCodeError('user:login:missingInformation');
-    //     if (!body.email) throw new MessageCodeError('user:login:missingEmail');
-    //     if (!body.password) throw new MessageCodeError('user:login:missingPassword');
-    //     return await this.authService.sign(body);
-    // }
-
-    // @Public()
-    // @Post('/register')
-    // async register(@Body() user: User) {
-    //     let added = await saveUser(user);
-    //     if (!user || isEmpty(user)) throw new MessageCodeError('user:create:missingInformation');
-    //     return {
-    //         user: added,
-    //         message: 'User registered!'
-    //     }
-    // }
-
-    // @Get('/verify')
-    // async verify(@Request() req) {
-    //     if (req.user) return await findUserById(req.user._id);
-    // }
+    // verify
+    @ApiBearerAuth('JWT')
+    @ApiHeader({
+        name: 'Token',
+        required: true,
+    })
+    @ApiResponse(authSwagger.verify.res)
+    @ApiOperation({
+        summary: ' - verify token',
+        description: '<b>NOTE</b>: When used from Swagger it uses the header <i>Token</i> provided below. When used from web app it uses the header <i>Authorization</i>.'
+    })
+    @Get('/verify')
+    async verify(
+        @Headers() headers: any,
+    ) {
+        return await this.authService.verify(headers);
+    }
 
 
 }

@@ -1,30 +1,50 @@
-import {
-  ExceptionFilter,
-  Catch,
-  ArgumentsHost,
-  HttpException,
-  HttpStatus,
-} from '@nestjs/common';
-import { HttpAdapterHost } from '@nestjs/core';
+import { ArgumentsHost, Catch, ExceptionFilter, HttpException } from '@nestjs/common';
+import * as mongoose from 'mongoose';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
-  constructor() {}
+  constructor() { }
 
-  catch(exception: unknown, host: ArgumentsHost): void {
-    const response = host.switchToHttp().getResponse();
-    console.log(host.switchToHttp());
-    const httpStatus =
-      exception instanceof HttpException
-        ? exception.getStatus()
-        : HttpStatus.INTERNAL_SERVER_ERROR;
+  catch(err: any, host: ArgumentsHost): void {
+    let response = host.switchToHttp().getResponse();
+    let customError: any = { status: null, message: [] };
+    switch (err.name) {
+      case mongoose.Error.ValidationError.name:
+        customError.status = 500;
+        for (let field in err.errors) customError.message = err.errors[field].message;
+        break;
+      case 'MongoServerError':
+        customError.status = 500;
+        if (err.code === 11000) {
+          for (let key in err.keyValue) {
+            customError.message = `Duplicated ${key}: ${err.keyValue.name}`;
+          }
+        } else {
+          customError.message = err.message;
+        }
+        break;
+      case 'CastError':
+        customError.status = 500;
+        customError.message = err.message;
+        break;
+      case 'TypeError':
+        customError.status = 500;
+        customError.message = err.message;
+        break;
+      case HttpException.name:
+        customError.status = err.getStatus();
+        customError.message = err.message;
+        break;
+      case 'JsonWebTokenError':
+        customError.status = 401;
+        customError.message = err.message;
+        break;
+      default:
+        customError.status = err ? err.getStatus() : 500;
+        customError.message = err ? err.message : 'Internal server error';
+        break;
+    }
 
-    const responseBody = {
-      statusCode: httpStatus,
-      timestamp: new Date().toISOString(),
-      //path: httpAdapter.getRequestUrl(ctx.getRequest()),
-    };
-
-    return response.status(httpStatus).json(responseBody);
+    return response.status(customError.status).json(customError);
   }
 }
