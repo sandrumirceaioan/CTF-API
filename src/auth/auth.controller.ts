@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpException, HttpStatus, Post, Req, Request, SetMetadata, UseGuards, Header, Param, Head, Headers, Query } from '@nestjs/common';
+import { Body, Controller, Get, HttpException, HttpStatus, Post, Req, SetMetadata, UseGuards, Header, Param, Head, Headers, Query } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiResponse, ApiTags, ApiUnauthorizedResponse, ApiHeader, ApiParam, ApiBearerAuth, ApiHeaders, ApiQuery } from "@nestjs/swagger";
 
 import { Public } from '../common/decorators/public.decorators';
@@ -7,7 +7,8 @@ import { AuthService } from './auth.service';
 import { authSwagger } from "../auth/auth.swagger";
 import { isEmpty } from 'underscore';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
-import { HeaderObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
+import { AuthGuard } from '@nestjs/passport';
+import { Request } from "express";
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -68,6 +69,24 @@ export class AuthController {
         return await this.authService.verify(headers);
     }
 
+    // init facebook login
+    @Public()
+    @Get('/facebook')
+    @UseGuards(AuthGuard("facebook"))
+    async facebookLogin(): Promise<any> {
+        return HttpStatus.OK;
+    }
+
+    // postback facebook login
+    @Public()
+    @Get('/facebook/redirect')
+    @UseGuards(AuthGuard('facebook'))
+    async facebookLoginRedirect(@Req() req: Request): Promise<any> {
+        return {
+            statusCode: HttpStatus.OK,
+            data: req.user,
+        };
+    }
 
 }
 

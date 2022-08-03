@@ -9,6 +9,7 @@ import { SharedModule } from './common/modules/shared/shared.module';
 import { UsersModule } from './users/users.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/role.guard';
+import { FacebookStrategy } from './auth/facebook.strategy';
 
 @Module({
   imports: [
@@ -38,7 +39,7 @@ import { RolesGuard } from './common/guards/role.guard';
       provide: APP_GUARD,
       useClass: RolesGuard,
     },
-
+    FacebookStrategy
   ],
 })
 export class AppModule { }

@@ -40,7 +40,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
         customError.message = err.message;
         break;
       default:
-        customError.status = err ? err.getStatus() : 500;
+        customError.status = 500;
         customError.message = err ? err.message : 'Internal server error';
         break;
     }
