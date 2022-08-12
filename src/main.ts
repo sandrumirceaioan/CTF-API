@@ -15,7 +15,7 @@ async function bootstrap() {
 
   const swaggerOptions = new DocumentBuilder()
     .setTitle('CTF API')
-    .setDescription('REST API documentation')
+    .setDescription('REST API Documentation')
     .setVersion('1.0')
     .addBearerAuth(
       { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
