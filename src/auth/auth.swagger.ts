@@ -7,6 +7,9 @@ export class LoginRequest {
 
     @ApiProperty({ example: '12345' })
     password: string;
+
+    @ApiProperty({ example: 'true/false' })
+    remember: boolean;
 }
 
 export class LoginResponse {
@@ -17,6 +20,21 @@ export class LoginResponse {
     token: string;
 }
 
+export class ResetRequest {
+    @ApiProperty({ example: 'user@email.com' })
+    email: string;
+}
+
+export class ResetResponse {
+    @ApiProperty({ example: 200 })
+    status: number;
+
+    @ApiProperty({ example: 'example@domain.mailgun.org' })
+    id: string;
+
+    @ApiProperty({ example: 'Queued. Thank you.' })
+    message: string;
+}
 
 
 export class AuthUser extends User {
@@ -40,6 +58,15 @@ export const authSwagger = {
         },
         res: {
             type: User
+        }
+    },
+    reset: {
+        req: {
+            type: ResetRequest,
+        },
+        res: {
+            status: 200,
+            type: ResetResponse
         }
     },
     verify: {

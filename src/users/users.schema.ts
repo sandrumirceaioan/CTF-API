@@ -5,6 +5,9 @@ export type UserDocument = User & Document;
 
 @Schema()
 export class User {
+  @Prop()
+  _id?: string;
+
   @ApiProperty({ example: 'user@email.com' })
   @Prop({ required: true, unique: true })
   email: string;

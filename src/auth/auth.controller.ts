@@ -4,7 +4,7 @@ import { ApiBody, ApiOperation, ApiResponse, ApiTags, ApiUnauthorizedResponse, A
 import { Public } from '../common/decorators/public.decorators';
 import { User } from '../users/users.schema';
 import { AuthService } from './auth.service';
-import { authSwagger } from "../auth/auth.swagger";
+import { authSwagger, LoginRequest, ResetRequest } from "../auth/auth.swagger";
 import { isEmpty } from 'underscore';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { AuthGuard } from '@nestjs/passport';
@@ -28,12 +28,12 @@ export class AuthController {
     })
     @Post('/login')
     async login(
-        @Body() user: User
+        @Body() credentials: LoginRequest
     ) {
-        if (!user || isEmpty(user)) throw new HttpException('Credentials missing', HttpStatus.BAD_REQUEST);
-        if (!user.email) throw new HttpException('Email is required', HttpStatus.BAD_REQUEST);
-        if (!user.password) throw new HttpException('Password is required', HttpStatus.BAD_REQUEST);
-        return await this.authService.login(user);
+        if (!credentials || isEmpty(credentials)) throw new HttpException('Credentials missing', HttpStatus.BAD_REQUEST);
+        if (!credentials.email) throw new HttpException('Email is required', HttpStatus.BAD_REQUEST);
+        if (!credentials.password) throw new HttpException('Password is required', HttpStatus.BAD_REQUEST);
+        return await this.authService.login(credentials);
     }
 
     // register
@@ -49,6 +49,20 @@ export class AuthController {
         @Body() user: User
     ) {
         return await this.authService.register(user);
+    }
+
+    // reset password init
+    @Public()
+    @ApiBody(authSwagger.reset.req)
+    @ApiResponse(authSwagger.reset.res)
+    @ApiOperation({
+        summary: ' - reset password'
+    })
+    @Post('/reset')
+    async reset(
+        @Body() body: ResetRequest
+    ) {
+        return await this.authService.resetPasswordInit(body);
     }
 
     // verify
