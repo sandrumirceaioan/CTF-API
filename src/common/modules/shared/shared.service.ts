@@ -54,6 +54,7 @@ export class SharedService {
         const mailgun = new Mailgun(formData);
         const client = mailgun.client({ username: 'api', key: this.mailGun.key, url: `https://api.mailgun.net` });
 
+        
         const messageData = {
             from: `CTF APP ${this.mailGun.sender}`,
             to: `${recipient}`,
