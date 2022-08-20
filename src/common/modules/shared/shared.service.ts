@@ -63,8 +63,6 @@ export class SharedService {
             html: resetTemplate
         };
 
-        console.log(messageData);
-
         return client.messages.create(this.mailGun.domain, messageData);
     }
 
