@@ -66,10 +66,4 @@ export class SharedService {
         return client.messages.create(this.mailGun.domain, messageData);
     }
 
-    // function to encode file data to base64 encoded string
-    public async base64_encode(file) {
-        // read binary data
-        return fs.readFileSync(path.resolve(__dirname, file), 'base64');
-    }
-
 }
