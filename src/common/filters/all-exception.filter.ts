@@ -39,6 +39,10 @@ export class AllExceptionsFilter implements ExceptionFilter {
         customError.status = 401;
         customError.message = err.message;
         break;
+      case 'TokenExpiredError':
+        customError.status = 400;
+        customError.message = err.message;
+        break;
       default:
         customError.status = 500;
         customError.message = err ? err.message : 'Internal server error';

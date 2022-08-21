@@ -4,7 +4,7 @@ import { ApiBody, ApiOperation, ApiResponse, ApiTags, ApiUnauthorizedResponse, A
 import { Public } from '../common/decorators/public.decorators';
 import { User } from '../users/users.schema';
 import { AuthService } from './auth.service';
-import { authSwagger, LoginRequest, ResetRequest } from "../auth/auth.swagger";
+import { authSwagger, LoginRequest, ResetPasswordInitRequest, ResetPasswordRequest } from "../auth/auth.swagger";
 import { isEmpty } from 'underscore';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { AuthGuard } from '@nestjs/passport';
@@ -53,16 +53,30 @@ export class AuthController {
 
     // reset password init
     @Public()
+    @ApiBody(authSwagger.resetinit.req)
+    @ApiResponse(authSwagger.resetinit.res)
+    @ApiOperation({
+        summary: ' - reset password init'
+    })
+    @Post('/reset-password-init')
+    async resetInit(
+        @Body() body: ResetPasswordInitRequest
+    ) {
+        return await this.authService.resetPasswordInit(body);
+    }
+
+    // reset password
+    @Public()
     @ApiBody(authSwagger.reset.req)
     @ApiResponse(authSwagger.reset.res)
     @ApiOperation({
         summary: ' - reset password'
     })
-    @Post('/reset')
+    @Post('/reset-password')
     async reset(
-        @Body() body: ResetRequest
+        @Body() body: ResetPasswordRequest
     ) {
-        return await this.authService.resetPasswordInit(body);
+        return await this.authService.resetPassword(body);
     }
 
     // verify

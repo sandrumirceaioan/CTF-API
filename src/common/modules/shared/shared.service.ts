@@ -5,7 +5,7 @@ const formData = require('form-data');
 const Handlebars = require('handlebars');
 const fs = require('fs');
 const path = require("path");
-
+const nodemailer = require("nodemailer");
 
 @Injectable()
 export class SharedService {
@@ -39,6 +39,7 @@ export class SharedService {
         }
     }
 
+
     public async sendMail(recipient, token): Promise<any> {
         console.log('MAILGUN: ', this.mailGun);
         console.log('RECIPIENT: ', recipient);
@@ -46,12 +47,13 @@ export class SharedService {
 
         const env = this.configService.get('ENVIRONMENT');
         if (env === 'dev') {
-
+            console.log('DEV ENV');
             const source = fs.readFileSync(path.resolve(__dirname, '../../../assets/templates/reset-password.template.hbs'), 'utf8');
             const template = Handlebars.compile(source);
             const resetTemplate = template({
                 "logoImg": `${this.configService.get('API_URL')}/ctf-logo-white-medium.png`,
-                "resetUrl": `${this.configService.get('APP_URL')}/reset/${token}`,
+                "resetUrl": `${this.configService.get('APP_URL')}/auth/reset/${token}`,
+                "appUrl": this.configService.get('APP_URL')
             });
 
             const mailgun = new Mailgun(formData);
@@ -68,7 +70,7 @@ export class SharedService {
 
             return client.messages.create(this.mailGun.domain, messageData);
         } else if (env === 'prod') {
-
+            console.log('PROD ENV');
             const source = `
             <!doctype html>
             <html lang="ro">
@@ -97,10 +99,7 @@ export class SharedService {
                                 </tr>
                                 <tr>
                                     <td style="text-align:center; background-color: #1C0E5C; height: 100px; padding: 15px; border-radius:10px;">
-                                        <a href="http://localhost:4200" title="logo" target="_blank">
-                                            <img width="200" src="{{logoImg}}" title="logo"
-                                                alt="logo">
-                                        </a>
+                                        <a href="{{appUrl}}" title="logo" target="_blank">CTF</a>
                                     </td>
                                 </tr>
                                 <tr>
@@ -159,7 +158,8 @@ export class SharedService {
             const template = Handlebars.compile(source);
             const resetTemplate = template({
                 "logoImg": `${this.configService.get('HEROKU_APP_LOGO')}`,
-                "resetUrl": `${this.configService.get('APP_URL')}/reset/${token}`,
+                "resetUrl": `${this.configService.get('APP_URL')}/auth/reset/${token}`,
+                "appUrl": this.configService.get('APP_URL')
             });
 
             const mailgun = new Mailgun(formData);
