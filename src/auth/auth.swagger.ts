@@ -20,9 +20,17 @@ export class LoginResponse {
     token: string;
 }
 
-export class ResetRequest {
+export class ResetPasswordInitRequest {
     @ApiProperty({ example: 'user@email.com' })
     email: string;
+}
+
+export class ResetPasswordRequest {
+    @ApiProperty({ example: '12345' })
+    password: string;
+
+    @ApiProperty({ example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c' })
+    token: string;
 }
 
 export class ResetResponse {
@@ -60,13 +68,22 @@ export const authSwagger = {
             type: User
         }
     },
-    reset: {
+    resetinit: {
         req: {
-            type: ResetRequest,
+            type: ResetPasswordInitRequest,
         },
         res: {
             status: 200,
             type: ResetResponse
+        }
+    },
+    reset: {
+        req: {
+            type: ResetPasswordRequest,
+        },
+        res: {
+            status: 200,
+            type: Boolean
         }
     },
     verify: {

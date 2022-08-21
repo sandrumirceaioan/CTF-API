@@ -37,10 +37,9 @@ export class UsersService {
         return this.userModel.find({ '_id': { $in: ids } }).sort(options.sort).skip(options.skip).limit(options.limit).select(options.select).lean();
     }
 
-    async update(query, update, options?): Promise<User> {
+    async findByIdAndUpdate(id, update, options?): Promise<User> {
         options = this.sharedService.validateOptions(options);
-        update.password = SHA256(update.password, (process.env as any).CRYPTO_KEY).toString();
-        return this.userModel.findByIdAndUpdate(query.id, update, pick(options, "new", "upsert")).lean();
+        return this.userModel.findByIdAndUpdate(id, update, pick(options, "new", "upsert")).lean();
     }
 
     async count(query): Promise<number> {
