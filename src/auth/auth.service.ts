@@ -3,10 +3,12 @@ import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '../users/users.schema';
 import { SHA256 } from 'crypto-js';
-import { LoginRequest, LoginResponse, ResetPasswordInitRequest, ResetPasswordRequest } from './auth.swagger';
+import { LoginRequest, LoginResponse, RegisterRequest, RegisterResponse, ResetPasswordInitRequest, ResetPasswordRequest } from './types/auth.types';
 import { ConfigService } from '@nestjs/config';
 import { SharedService } from 'src/common/modules/shared/shared.service';
-
+import { hash, compareSync } from 'bcrypt';
+import { Tokens } from './types/token.types';
+import { throwIfEmpty } from 'rxjs';
 
 @Injectable()
 export class AuthService {
@@ -17,35 +19,95 @@ export class AuthService {
         private sharedService: SharedService
     ) { }
 
-    async login(credentials: LoginRequest): Promise<LoginResponse> {
-        let encriptedPassword = SHA256(credentials.password, (process.env as any).CRYPTO_KEY).toString();
-        const user: User | any = await this.usersService.findOne({ email: credentials.email.toLowerCase(), password: encriptedPassword });
-        if (!user) throw new UnauthorizedException('Invalid email or password');
-
-        const payload = {
-            id: user._id,
-            role: user.role,
-            email: user.email
-        };
-        const token = this.jwtService.sign(payload, { expiresIn: credentials.remember ? '30d' : this.configService.get<string>('JWT_EXPIRES') });
-        return { token, user };
-    }
-
-    async register(user: User): Promise<User> {
-        const exist = await this.usersService.findOne({ email: user.email }, { select: 'email' });
+    // auth with refresh tokens
+    async localRegister(body: RegisterRequest): Promise<RegisterResponse> {
+        const exist = await this.usersService.findOne({ email: body.email }, { select: 'email' });
         if (exist && exist.email) throw new HttpException('Email already registered', HttpStatus.BAD_REQUEST);
-        user.password = SHA256(user.password, this.configService.get('CRYPTO_KEY')).toString();
-        if(!user.role) user.role = 'user'; 
-        return this.usersService.save(user);
+
+        const newUser = await this.usersService.save({
+            email: body.email,
+            firstName: body.firstName,
+            lastName: body.lastName,
+            birthDate: body.birthDate,
+            gender: body.gender,
+            role: body.role ? body.role : 'user',
+            atHash: await this.hashData(body.password),
+            status: true // TBD if we keep statuses
+        });
+
+        const tokens = await this.getTokens(newUser['_id'].toString(), newUser.role, newUser.email);
+        await this.updateRtHash(newUser['_id'].toString(), tokens.refresh_token);
+        return { tokens };
     }
 
-    async verify(headers: any): Promise<any> {
-        const token = headers.token ? headers.token : headers.authorization.split('Bearer')[1].trim();
-        const valid = await this.jwtService.verify(token, this.configService.get<any>('JWT_KEY'));
-        if (valid && valid.id) return await this.usersService.findById(valid.id);
-        throw new HttpException('Could not verify request', HttpStatus.UNAUTHORIZED);
+    async localLogin(body: LoginRequest): Promise<LoginResponse> {
+        const user = await this.usersService.findOne({ email: body.email });
+        if (!user) throw new UnauthorizedException('User not found');
+        const correctPassword = await compareSync(body.password, user.atHash);
+        if (!correctPassword) throw new UnauthorizedException('Access denied');
+
+        const tokens = await this.getTokens(user['_id'].toString(), user.role, user.email);
+        await this.updateRtHash(user['_id'].toString(), tokens.refresh_token);
+        return { user, tokens };
     }
 
+    async logout(userId: string) {
+        await this.usersService.findOneAndUpdate({
+            _id: userId,
+            rtHash: { $ne: null }
+        }, {
+            rtHash: null
+        });
+
+        return;
+    }
+
+    async refreshTokens(userId: string, rt: string): Promise<LoginResponse> {
+        const user = await this.usersService.findById(userId);
+        if (!user || !user.rtHash) throw new UnauthorizedException('User not found');
+        const rtMatches = await compareSync(rt, user.rtHash);
+        if (!rtMatches) throw new UnauthorizedException('Refresh access denied');
+
+        const tokens = await this.getTokens(user['_id'].toString(), user.role, user.email);
+        await this.updateRtHash(user['_id'].toString(), tokens.refresh_token);
+        return { user, tokens };
+    }
+
+    private async updateRtHash(userId: string, rt: string) {
+        const hash = await this.hashData(rt);
+        await this.usersService.findByIdAndUpdate(userId, { rtHash: hash });
+    }
+
+    private hashData(data: string): Promise<string> {
+        return hash(data, 10);
+    }
+
+    private async getTokens(userId: string, userRole: string, userEmail: string): Promise<Tokens> {
+        const [at, rt] = await Promise.all([
+            this.jwtService.signAsync({
+                id: userId,
+                role: userRole,
+                email: userEmail,
+            }, {
+                secret: this.configService.get<string>('AT_SECRET'),
+                expiresIn: 60 * 15 // 15 minutes
+            }),
+            this.jwtService.signAsync({
+                id: userId,
+                role: userRole,
+                email: userEmail,
+            }, {
+                secret: this.configService.get<string>('RT_SECRET'),
+                expiresIn: 60 * 60 * 24 * 7 // 1 week
+            })
+        ]);
+        return {
+            access_token: at,
+            refresh_token: rt
+        }
+    }
+
+    // reset password
     async resetPasswordInit(body: ResetPasswordInitRequest) {
         console.log(body);
         let user: User | any = await this.usersService.findOne({ email: body.email }, { select: '_id email' });
@@ -92,4 +154,5 @@ export class AuthService {
             });
         });
     }
+
 }

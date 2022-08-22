@@ -7,9 +7,9 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { SharedModule } from './common/modules/shared/shared.module';
 import { UsersModule } from './users/users.module';
-import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
+import { AtGuard } from './common/guards/jwt-at.guard';
 import { RolesGuard } from './common/guards/role.guard';
-import { FacebookStrategy } from './auth/facebook.strategy';
+import { FacebookStrategy } from './auth/strategies/fb.strategy';
 
 @Module({
   imports: [
@@ -33,7 +33,7 @@ import { FacebookStrategy } from './auth/facebook.strategy';
     AppService,
     {
       provide: APP_GUARD,
-      useClass: JwtAuthGuard,
+      useClass: AtGuard,
     },
     {
       provide: APP_GUARD,

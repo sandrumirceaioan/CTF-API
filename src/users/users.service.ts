@@ -37,6 +37,11 @@ export class UsersService {
         return this.userModel.find({ '_id': { $in: ids } }).sort(options.sort).skip(options.skip).limit(options.limit).select(options.select).lean();
     }
 
+    async findOneAndUpdate(query, update, options?): Promise<User> {
+        options = this.sharedService.validateOptions(options);
+        return this.userModel.findOneAndUpdate(query, update, pick(options, "new", "upsert")).lean();
+    }
+
     async findByIdAndUpdate(id, update, options?): Promise<User> {
         options = this.sharedService.validateOptions(options);
         return this.userModel.findByIdAndUpdate(id, update, pick(options, "new", "upsert")).lean();

@@ -3,7 +3,7 @@ import {Reflector} from '@nestjs/core';
 import {AuthGuard} from '@nestjs/passport';
 
 @Injectable()
-export class JwtAuthGuard extends AuthGuard('jwt') {
+export class AtGuard extends AuthGuard('jwt') {
     constructor(
         private reflector: Reflector
     ) {
@@ -18,12 +18,5 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
 
         // call canActivate() from inherited method
         return super.canActivate(context);
-    }
-
-    handleRequest(err, user) {
-        if (err || !user) {
-            throw err || new HttpException(err ? err.message : 'Unauthorized!', HttpStatus.UNAUTHORIZED);
-        }
-        return user;
     }
 }

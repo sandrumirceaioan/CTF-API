@@ -35,6 +35,10 @@ export class AllExceptionsFilter implements ExceptionFilter {
         customError.status = err.getStatus();
         customError.message = err.message;
         break;
+      case 'BadRequestException':
+        customError.status = err.response.statusCode;
+        customError.message = err.response.message;
+        break;
       case 'JsonWebTokenError':
         customError.status = 401;
         customError.message = err.message;
