@@ -34,6 +34,7 @@ export class AuthService {
             status: true // TBD if we keep statuses
         });
 
+        // generate one set of tokens - hashed acces token needed for login password comparation
         const tokens = await this.getTokens(newUser['_id'].toString(), newUser.role, newUser.email);
         await this.updateRtHash(newUser['_id'].toString(), tokens.refresh_token);
         return { tokens };
@@ -41,54 +42,60 @@ export class AuthService {
 
     // login
     async localLogin(body: LoginRequest): Promise<LoginResponse> {
+        // check for user in database using email address provided
         const user = await this.usersService.findOne({ email: body.email });
         if (!user) throw new UnauthorizedException('User not found');
+
+        // compare provided password with user hashed access token 
         const correctPassword = await compareSync(body.password, user.atHash);
         if (!correctPassword) throw new UnauthorizedException('Access denied');
 
-        const tokens = await this.getTokens(user['_id'].toString(), user.role, user.email);
+        // generate new set of tokens and update user rtHash for following comparations
+        const tokens = await this.getTokens(user['_id'].toString(), user.role, user.email, body.remember);
         await this.updateRtHash(user['_id'].toString(), tokens.refresh_token);
         return { user, tokens };
     }
 
     // logout
     async logout(userId: string) {
+        // delete hashed refresh token to prevent being used for new refresh token calls
         await this.usersService.findOneAndUpdate({
             _id: userId,
             rtHash: { $ne: null }
-        }, {
-            rtHash: null
-        });
+        }, { rtHash: null });
 
         return;
     }
 
     // refresh
     async refreshTokens(userId: string, rt: string): Promise<LoginResponse> {
-        console.log(userId, rt);
+        // check if user exists - we need refresh token from it for compatation
         const user = await this.usersService.findById(userId);
         if (!user || !user.rtHash) throw new UnauthorizedException('User not found');
+
+        // compare received refresh token with hasged refresh token from user
         const rtMatches = await compareSync(rt, user.rtHash);
         if (!rtMatches) throw new UnauthorizedException('Refresh access denied');
 
-        const tokens = await this.getTokens(user['_id'].toString(), user.role, user.email);
-        await this.updateRtHash(user['_id'].toString(), tokens.refresh_token);
+        // generate new set of tokens and update user rtHash for following comparations
+        const tokens = await this.getTokens(userId, user.role, user.email);
+        await this.updateRtHash(userId, tokens.refresh_token);
         return { user, tokens };
     }
 
-    // update rtHash
+    // helper - update rtHash
     private async updateRtHash(userId: string, rt: string) {
         const hash = await this.hashData(rt);
         await this.usersService.findByIdAndUpdate(userId, { rtHash: hash });
     }
 
-    // hash data with bcrypt
+    // helper - hash data with bcrypt
     private hashData(data: string): Promise<string> {
         return hash(data, 10);
     }
 
-    // generate at and rt tokens
-    private async getTokens(userId: string, userRole: string, userEmail: string): Promise<Tokens> {
+    // helper - generate at and rt tokens
+    private async getTokens(userId: string, userRole: string, userEmail: string, remember = false): Promise<Tokens> {
         const [at, rt] = await Promise.all([
             this.jwtService.signAsync({
                 id: userId,
@@ -96,7 +103,7 @@ export class AuthService {
                 email: userEmail,
             }, {
                 secret: this.configService.get<string>('AT_SECRET'),
-                expiresIn: 60 // 15 minutes
+                expiresIn: remember ? '15d' : '15m' // 15 minutes (or 15 days with remember)
             }),
             this.jwtService.signAsync({
                 id: userId,
@@ -104,7 +111,7 @@ export class AuthService {
                 email: userEmail,
             }, {
                 secret: this.configService.get<string>('RT_SECRET'),
-                expiresIn: 60 * 10 // 1 week
+                expiresIn: remember ? '30d' : '1w' // 1 week (or 30 days with remember)
             })
         ]);
         return {
@@ -146,10 +153,9 @@ export class AuthService {
             await this.jwtService.verifyAsync(body.token, this.configService.get<any>('AT_SECRET')).then(async (valid) => {
                 if (valid) {
                     let newPassword = SHA256(body.password, this.configService.get('CRYPTO_KEY')).toString();
-                    const updated = await this.usersService.findByIdAndUpdate(valid.id, { password: newPassword }, { new: true });
+                    const updated = await this.usersService.findByIdAndUpdate(valid.id, { atHash: await this.hashData(newPassword) }, { new: true });
                     if (updated) {
                         console.log('User password updated');
-                        // TODO - find a way to destroy a JWT token
                     } else {
                         console.log('User password NOT updated');
                     }

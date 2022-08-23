@@ -7,9 +7,11 @@ import { AuthService } from './auth.service';
 import { AuthGuard } from '@nestjs/passport';
 import { Request } from "express";
 import { authSwagger } from './types/swagger.types';
-import { LoginRequest, RegisterRequest, RegisterResponse, ResetPasswordInitRequest, ResetPasswordRequest } from './types/auth.types';
+import { LoginRequest, LoginResponse, RegisterRequest, RegisterResponse, ResetPasswordInitRequest, ResetPasswordRequest } from './types/auth.types';
+import { RtGuard } from '../common/guards/jwt-rt.guard';
+import { GetCurrentUserId } from '../common/decorators/current-user-id.decorator';
 import { AtGuard } from 'src/common/guards/jwt-at.guard';
-import { RtGuard } from 'src/common/guards/jwt-rt.guard';
+import { GetCurrentUser } from 'src/common/decorators/current-user.decorator';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -19,6 +21,7 @@ export class AuthController {
     ) {
     }
 
+    // LOCAL AUTH
     // register
     @Public()
     @ApiBody(authSwagger.register.req)
@@ -56,13 +59,16 @@ export class AuthController {
     @UseGuards(RtGuard)
     @Post('/local/refresh')
     @HttpCode(HttpStatus.OK)
-    async refreshTokens(@Req() req: Request, @Body() body: any) {
-        console.log('INTRAAAAAAAAAAA')
-        console.log(req.user['id'], body['refreshToken'])
-        // JWT payload attached to req.user in 'jwt-refresh' strategy
-        return await this.authService.refreshTokens(req.user['id'], body['refreshToken']);
+    refreshTokens(
+        @GetCurrentUserId() userId: string,
+        @GetCurrentUser('refreshToken') refreshToken: string,
+    ): Promise<LoginResponse> {
+        console.log('TRY REFRESH TOKENS');
+        console.log(userId, refreshToken)
+        return this.authService.refreshTokens(userId, refreshToken);
     }
 
+    // FACEBOOK AUTH
     // init facebook login
     @Public()
     @Get('/facebook')

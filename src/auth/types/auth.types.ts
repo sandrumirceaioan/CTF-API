@@ -35,8 +35,6 @@ export class RegisterRequest {
     gender: 'male' | 'female';
 
     @ApiProperty({ example: 'user' })
-    @IsNotEmpty()
-    @IsString()
     role: 'admin' | 'user';
 }
 
