@@ -1,15 +1,60 @@
+import { IsBoolean, IsEmail, IsNotEmpty, IsString } from "class-validator";
 import { ApiProperty } from "@nestjs/swagger";
-import { User } from "../users/users.schema";
+import { User } from "../../users/users.schema";
+import { Tokens } from "./token.types";
+
+export class RegisterRequest {
+    @ApiProperty({ example: 'user@email.com' })
+    @IsNotEmpty()
+    @IsString()
+    email: string;
+
+    @ApiProperty({ example: '12345678' })
+    @IsNotEmpty()
+    @IsString()
+    password: string;
+
+    @ApiProperty({ example: 'John' })
+    @IsNotEmpty()
+    @IsString()
+    firstName: string;
+
+    @ApiProperty({ example: 'Doe' })
+    @IsNotEmpty()
+    @IsString()
+    lastName: string;
+
+    @ApiProperty({ example: '1987-06-24' })
+    @IsNotEmpty()
+    @IsString()
+    birthDate: Date;
+
+    @ApiProperty({ example: 'male' })
+    @IsNotEmpty()
+    @IsString()
+    gender: 'male' | 'female';
+
+    @ApiProperty({ example: 'user' })
+    role: 'admin' | 'user';
+}
+
+export class RegisterResponse {
+    tokens: Tokens
+}
 
 export class LoginRequest {
     @ApiProperty({ example: 'user@email.com' })
+    @IsNotEmpty()
+    @IsString()
     email: string;
 
-    @ApiProperty({ example: '12345' })
+    @ApiProperty({ example: '12345678' })
+    @IsNotEmpty()
+    @IsString()
     password: string;
 
     @ApiProperty({ example: 'true/false' })
-    remember: boolean;
+    remember?: boolean;
 }
 
 export class LoginResponse {
@@ -17,7 +62,7 @@ export class LoginResponse {
     user: User;
 
     @ApiProperty({ example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c' })
-    token: string;
+    tokens: Tokens;
 }
 
 export class ResetPasswordInitRequest {
@@ -42,53 +87,4 @@ export class ResetResponse {
 
     @ApiProperty({ example: 'Queued. Thank you.' })
     message: string;
-}
-
-
-export class AuthUser extends User {
-    @ApiProperty()
-    _id: string;
-}
-
-export const authSwagger = {
-    login: {
-        req: {
-            type: LoginRequest,
-        },
-        res: {
-            status: 200,
-            type: LoginResponse,
-        }
-    },
-    register: {
-        req: {
-            type: User,
-        },
-        res: {
-            type: User
-        }
-    },
-    resetinit: {
-        req: {
-            type: ResetPasswordInitRequest,
-        },
-        res: {
-            status: 200,
-            type: ResetResponse
-        }
-    },
-    reset: {
-        req: {
-            type: ResetPasswordRequest,
-        },
-        res: {
-            status: 200,
-            type: Boolean
-        }
-    },
-    verify: {
-        res: {
-            type: User
-        }
-    }
 }

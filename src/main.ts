@@ -6,13 +6,21 @@ import { join } from 'path';
 import { ConfigService } from '@nestjs/config';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { AllExceptionsFilter } from './common/filters/all-exception.filter';
+import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const config = app.get<ConfigService>(ConfigService);
   app.use(bodyParser.json({ limit: '100mb' }));
-  app.useGlobalFilters(new AllExceptionsFilter());
+
+  // sets app main route
   app.setGlobalPrefix('api');
+
+  // used for error global filter
+  app.useGlobalFilters(new AllExceptionsFilter());
+  
+  // use for dto validation
+  app.useGlobalPipes(new ValidationPipe());
 
   const swaggerOptions = new DocumentBuilder()
     .setTitle('CTF API')

@@ -5,45 +5,50 @@ export type UserDocument = User & Document;
 
 @Schema()
 export class User {
-  @ApiProperty({ example: 'user@email.com' })
   @Prop({ required: true, unique: true })
+  @ApiProperty({ example: 'user@email.com' })
   email: string;
 
-  @ApiProperty({ example: '12345' })
   @Prop({ required: true })
-  password: string;
-
   @ApiProperty({ example: 'John' })
-  @Prop({ required: true })
   firstName: string;
 
-  @ApiProperty({ example: 'Doe' })
   @Prop({ required: true })
+  @ApiProperty({ example: 'Doe' })
   lastName: string;
 
-  @ApiProperty({ example: '1987-06-24' })
   @Prop({ required: true })
+  @ApiProperty({ example: '1987-06-24' })
   birthDate: Date;
 
-  @ApiProperty({ example: 'male' })
   @Prop({ required: true })
+  @ApiProperty({ example: 'male' })
   gender: 'male' | 'female';
 
   @ApiProperty({ example: 'user' })
-  @Prop()
+  @Prop({ required: false })
   role: 'admin' | 'user';
 
-  @Prop()
+  @Prop({ required: false })
   status: boolean;
 
-  @Prop()
-  photo: string;
+  @Prop({ required: true })
+  atHash: string;
 
-  @Prop()
-  loggedAt: Date;
+  @Prop({ required: false })
+  rtHash?: string;
+
+  @Prop({ required: false })
+  photo?: string;
+
+  @Prop({ required: false })
+  loggedAt?: Date;
 
   @Prop({ default: new Date() })
-  createdAt: Date
+  createdAt?: Date;
+
+  @Prop({ default: new Date() })
+  updatedAt?: Date;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
