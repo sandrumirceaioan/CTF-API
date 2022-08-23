@@ -56,9 +56,7 @@ export class LoginRequest {
     password: string;
 
     @ApiProperty({ example: 'true/false' })
-    @IsNotEmpty()
-    @IsBoolean()
-    remember: boolean;
+    remember?: boolean;
 }
 
 export class LoginResponse {

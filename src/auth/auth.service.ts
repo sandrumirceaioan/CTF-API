@@ -8,7 +8,6 @@ import { ConfigService } from '@nestjs/config';
 import { SharedService } from 'src/common/modules/shared/shared.service';
 import { hash, compareSync } from 'bcrypt';
 import { Tokens } from './types/token.types';
-import { throwIfEmpty } from 'rxjs';
 
 @Injectable()
 export class AuthService {
@@ -19,7 +18,7 @@ export class AuthService {
         private sharedService: SharedService
     ) { }
 
-    // auth with refresh tokens
+    // register
     async localRegister(body: RegisterRequest): Promise<RegisterResponse> {
         const exist = await this.usersService.findOne({ email: body.email }, { select: 'email' });
         if (exist && exist.email) throw new HttpException('Email already registered', HttpStatus.BAD_REQUEST);
@@ -40,6 +39,7 @@ export class AuthService {
         return { tokens };
     }
 
+    // login
     async localLogin(body: LoginRequest): Promise<LoginResponse> {
         const user = await this.usersService.findOne({ email: body.email });
         if (!user) throw new UnauthorizedException('User not found');
@@ -51,6 +51,7 @@ export class AuthService {
         return { user, tokens };
     }
 
+    // logout
     async logout(userId: string) {
         await this.usersService.findOneAndUpdate({
             _id: userId,
@@ -62,7 +63,9 @@ export class AuthService {
         return;
     }
 
+    // refresh
     async refreshTokens(userId: string, rt: string): Promise<LoginResponse> {
+        console.log(userId, rt);
         const user = await this.usersService.findById(userId);
         if (!user || !user.rtHash) throw new UnauthorizedException('User not found');
         const rtMatches = await compareSync(rt, user.rtHash);
@@ -73,15 +76,18 @@ export class AuthService {
         return { user, tokens };
     }
 
+    // update rtHash
     private async updateRtHash(userId: string, rt: string) {
         const hash = await this.hashData(rt);
         await this.usersService.findByIdAndUpdate(userId, { rtHash: hash });
     }
 
+    // hash data with bcrypt
     private hashData(data: string): Promise<string> {
         return hash(data, 10);
     }
 
+    // generate at and rt tokens
     private async getTokens(userId: string, userRole: string, userEmail: string): Promise<Tokens> {
         const [at, rt] = await Promise.all([
             this.jwtService.signAsync({
@@ -90,7 +96,7 @@ export class AuthService {
                 email: userEmail,
             }, {
                 secret: this.configService.get<string>('AT_SECRET'),
-                expiresIn: 60 * 15 // 15 minutes
+                expiresIn: 60 // 15 minutes
             }),
             this.jwtService.signAsync({
                 id: userId,
@@ -98,7 +104,7 @@ export class AuthService {
                 email: userEmail,
             }, {
                 secret: this.configService.get<string>('RT_SECRET'),
-                expiresIn: 60 * 60 * 24 * 7 // 1 week
+                expiresIn: 60 * 10 // 1 week
             })
         ]);
         return {
@@ -137,7 +143,7 @@ export class AuthService {
 
     async resetPassword(body: ResetPasswordRequest): Promise<any> {
         return new Promise(async (resolve, reject) => {
-            await this.jwtService.verifyAsync(body.token, this.configService.get<any>('JWT_KEY')).then(async (valid) => {
+            await this.jwtService.verifyAsync(body.token, this.configService.get<any>('AT_SECRET')).then(async (valid) => {
                 if (valid) {
                     let newPassword = SHA256(body.password, this.configService.get('CRYPTO_KEY')).toString();
                     const updated = await this.usersService.findByIdAndUpdate(valid.id, { password: newPassword }, { new: true });

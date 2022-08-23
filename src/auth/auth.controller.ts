@@ -19,7 +19,68 @@ export class AuthController {
     ) {
     }
 
+    // register
+    @Public()
+    @ApiBody(authSwagger.register.req)
+    @ApiResponse(authSwagger.register.res)
+    @ApiOperation({
+        summary: ' - register user account'
+    })
+    @HttpCode(HttpStatus.CREATED)
+    @Post('/local/register')
+    async localRegister(@Body() body: RegisterRequest): Promise<RegisterResponse> {
+        return await this.authService.localRegister(body);
+    }
 
+    // login
+    @Public()
+    @ApiBody(authSwagger.login.req)
+    @ApiResponse(authSwagger.login.res)
+    @ApiOperation({
+        summary: ' - login user'
+    })
+    @HttpCode(HttpStatus.OK)
+    @Post('/local/login')
+    async localLogin(@Body() body: LoginRequest) {
+        return await this.authService.localLogin(body);
+    }
+
+    @Post('/logout')
+    async logout(@Req() req: Request) {
+        // JWT payload attached to req.user in 'jwt' strategy
+        return await this.authService.logout(req.user['id']);
+    }
+
+    // used to bypass global AtGuard and run RtGuard
+    @Public()
+    @UseGuards(RtGuard)
+    @Post('/local/refresh')
+    @HttpCode(HttpStatus.OK)
+    async refreshTokens(@Req() req: Request, @Body() body: any) {
+        console.log('INTRAAAAAAAAAAA')
+        console.log(req.user['id'], body['refreshToken'])
+        // JWT payload attached to req.user in 'jwt-refresh' strategy
+        return await this.authService.refreshTokens(req.user['id'], body['refreshToken']);
+    }
+
+    // init facebook login
+    @Public()
+    @Get('/facebook')
+    @UseGuards(AuthGuard("facebook"))
+    async facebookLogin(): Promise<any> {
+        return HttpStatus.OK;
+    }
+
+    // postback facebook login
+    @Public()
+    @Get('/facebook/redirect')
+    @UseGuards(AuthGuard('facebook'))
+    async facebookLoginRedirect(@Req() req: Request): Promise<any> {
+        return {
+            statusCode: HttpStatus.OK,
+            data: req.user,
+        };
+    }
 
     // reset password init
     @Public()
@@ -66,67 +127,6 @@ export class AuthController {
     // ) {
     //     return await this.authService.verify(headers);
     // }
-
-    // init facebook login
-    @Public()
-    @Get('/facebook')
-    @UseGuards(AuthGuard("facebook"))
-    async facebookLogin(): Promise<any> {
-        return HttpStatus.OK;
-    }
-
-    // postback facebook login
-    @Public()
-    @Get('/facebook/redirect')
-    @UseGuards(AuthGuard('facebook'))
-    async facebookLoginRedirect(@Req() req: Request): Promise<any> {
-        return {
-            statusCode: HttpStatus.OK,
-            data: req.user,
-        };
-    }
-
-    // AUTH 2
-
-    // register
-    @Public()
-    @ApiBody(authSwagger.register.req)
-    @ApiResponse(authSwagger.register.res)
-    @ApiOperation({
-        summary: ' - register user account'
-    })
-    @HttpCode(HttpStatus.CREATED)
-    @Post('/local/register')
-    async localRegister(@Body() body: RegisterRequest): Promise<RegisterResponse> {
-        return await this.authService.localRegister(body);
-    }
-
-    // login
-    @Public()
-    @ApiBody(authSwagger.login.req)
-    @ApiResponse(authSwagger.login.res)
-    @ApiOperation({
-        summary: ' - login user'
-    })
-    @HttpCode(HttpStatus.OK)
-    @Post('/local/login')
-    async localLogin(@Body() body: LoginRequest) {
-        return await this.authService.localLogin(body);
-    }
-
-    @Post('/logout')
-    async logout(@Req() req: Request) {
-        // JWT payload attached to req.user in 'jwt' strategy
-        return await this.authService.logout(req.user['id']);
-    }
-
-    @Public() // used to bypass global AtGuard and run RtGuard
-    @UseGuards(RtGuard)
-    @Post('/refresh')
-    async refreshTokens(@Req() req: Request) {
-        // JWT payload attached to req.user in 'jwt-refresh' strategy
-        return await this.authService.refreshTokens(req.user['id'], req.user['refreshToken']);
-    }
 
 }
 

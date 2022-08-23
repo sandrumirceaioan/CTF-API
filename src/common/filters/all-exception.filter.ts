@@ -39,13 +39,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
         customError.status = err.response.statusCode;
         customError.message = err.response.message;
         break;
-      case 'JsonWebTokenError':
-        customError.status = 401;
-        customError.message = err.message;
-        break;
-      case 'TokenExpiredError':
-        customError.status = 400;
-        customError.message = err.message;
+      case 'UnauthorizedException':
+        customError.status = err.response.statusCode;
+        customError.message = err.response.message;
         break;
       default:
         customError.status = 500;

@@ -11,6 +11,7 @@ export class AtGuard extends AuthGuard('jwt') {
     }
 
     canActivate(context: ExecutionContext) {
+        console.log('AT GUARD');
         // public decorator which will skip JwtAuthGuard
         const isPublic = this.reflector.get<boolean>('isPublic', context.getHandler());
 
