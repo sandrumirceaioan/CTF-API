@@ -48,7 +48,7 @@ export class AuthController {
         return await this.authService.localLogin(body);
     }
 
-    @Post('/logout')
+    @Post('/local/logout')
     async logout(@Req() req: Request) {
         // JWT payload attached to req.user in 'jwt' strategy
         return await this.authService.logout(req.user['id']);
@@ -66,6 +66,13 @@ export class AuthController {
         console.log('TRY REFRESH TOKENS');
         console.log(userId, refreshToken)
         return this.authService.refreshTokens(userId, refreshToken);
+    }
+
+    // used to bypass global AtGuard and run RtGuard
+    @Post('/local/verify')
+    @HttpCode(HttpStatus.OK)
+    verifyToken() {
+        return true;
     }
 
     // FACEBOOK AUTH

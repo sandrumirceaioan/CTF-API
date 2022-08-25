@@ -103,7 +103,7 @@ export class AuthService {
                 email: userEmail,
             }, {
                 secret: this.configService.get<string>('AT_SECRET'),
-                expiresIn: remember ? '15d' : '15m' // 15 minutes (or 15 days with remember)
+                expiresIn: '15s'
             }),
             this.jwtService.signAsync({
                 id: userId,
@@ -111,7 +111,7 @@ export class AuthService {
                 email: userEmail,
             }, {
                 secret: this.configService.get<string>('RT_SECRET'),
-                expiresIn: remember ? '30d' : '1w' // 1 week (or 30 days with remember)
+                expiresIn: '30s'
             })
         ]);
         return {
