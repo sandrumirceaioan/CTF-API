@@ -103,7 +103,7 @@ export class AuthService {
                 email: userEmail,
             }, {
                 secret: this.configService.get<string>('AT_SECRET'),
-                expiresIn: '15s'
+                expiresIn: remember ? '15d' : '15m' // 15 minutes (or 15 days with remember)
             }),
             this.jwtService.signAsync({
                 id: userId,
@@ -111,7 +111,7 @@ export class AuthService {
                 email: userEmail,
             }, {
                 secret: this.configService.get<string>('RT_SECRET'),
-                expiresIn: '30s'
+                expiresIn: remember ? '30d' : '1w' // 1 week (or 30 days with remember)
             })
         ]);
         return {
@@ -150,7 +150,7 @@ export class AuthService {
 
     async resetPassword(body: ResetPasswordRequest): Promise<any> {
         return new Promise(async (resolve, reject) => {
-            await this.jwtService.verifyAsync(body.token, this.configService.get<any>('AT_SECRET')).then(async (valid) => {
+            await this.jwtService.verifyAsync(body.token, { secret: this.configService.get<any>('AT_SECRET') }).then(async (valid) => {
                 if (valid) {
                     let newPassword = SHA256(body.password, this.configService.get('CRYPTO_KEY')).toString();
                     const updated = await this.usersService.findByIdAndUpdate(valid.id, { atHash: await this.hashData(newPassword) }, { new: true });
