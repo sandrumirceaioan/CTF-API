@@ -1,5 +1,5 @@
 import { Body, Controller, Get, HttpException, HttpStatus, Post, Req, SetMetadata, UseGuards, Header, Param, Head, Headers, Query, HttpCode } from '@nestjs/common';
-import { ApiBody, ApiOperation, ApiResponse, ApiTags, ApiUnauthorizedResponse, ApiHeader, ApiParam, ApiBearerAuth, ApiHeaders, ApiQuery } from "@nestjs/swagger";
+import { ApiBody, ApiOperation, ApiResponse, ApiTags, ApiUnauthorizedResponse, ApiHeader, ApiParam, ApiBearerAuth, ApiHeaders, ApiQuery, ApiHideProperty, ApiExcludeEndpoint } from "@nestjs/swagger";
 
 import { Public } from '../common/decorators/public.decorators';
 import { AuthService } from './auth.service';
@@ -8,20 +8,25 @@ import { AuthGuard } from '@nestjs/passport';
 import { Request } from "express";
 import { authSwagger } from './types/swagger.types';
 import { LoginRequest, LoginResponse, RegisterRequest, RegisterResponse, ResetPasswordInitRequest, ResetPasswordRequest } from './types/auth.types';
-import { RtGuard } from '../common/guards/jwt-rt.guard';
-import { GetCurrentUserId } from '../common/decorators/current-user-id.decorator';
-import { AtGuard } from 'src/common/guards/jwt-at.guard';
+import { JwtPayload } from './types/jwt-payload.types';
+import { JwtService } from '@nestjs/jwt';
+import { RtGuard } from 'src/common/guards/jwt-rt.guard';
+import { GetCurrentUserId } from 'src/common/decorators/current-user-id.decorator';
 import { GetCurrentUser } from 'src/common/decorators/current-user.decorator';
+import { ConfigService } from '@nestjs/config';
 
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
     constructor(
         private authService: AuthService,
+        private configService: ConfigService,
+        private jwtService: JwtService
     ) {
     }
 
-    // LOCAL AUTH
+    // *** LOCAL AUTH *** //
+
     // register
     @Public()
     @ApiBody(authSwagger.register.req)
@@ -48,25 +53,50 @@ export class AuthController {
         return await this.authService.localLogin(body);
     }
 
-    @Post('/logout')
-    async logout(@Req() req: Request) {
-        // JWT payload attached to req.user in 'jwt' strategy
-        return await this.authService.logout(req.user['id']);
+    @ApiOperation({
+        summary: ' - logout user'
+    })
+    @Post('/local/logout')
+    async logout(@GetCurrentUserId() userId: string) {
+        return await this.authService.logout(userId);
     }
 
-    // used to bypass global AtGuard and run RtGuard
+    // refresh
     @Public()
-    @UseGuards(RtGuard)
+    // @ApiExcludeEndpoint()
+    @ApiBody(authSwagger.refresh.req)
+    @ApiResponse(authSwagger.refresh.res)
+    @ApiOperation({
+        summary: ' - refresh token'
+    })
     @Post('/local/refresh')
     @HttpCode(HttpStatus.OK)
     refreshTokens(
-        @GetCurrentUserId() userId: string,
-        @GetCurrentUser('refreshToken') refreshToken: string,
+        @Body() body: any,
     ): Promise<LoginResponse> {
-        console.log('TRY REFRESH TOKENS');
-        console.log(userId, refreshToken)
-        return this.authService.refreshTokens(userId, refreshToken);
+        if (body.refreshToken) {
+            return this.jwtService.verifyAsync(body.refreshToken, { secret: this.configService.get<any>('RT_SECRET') }).then((payload: JwtPayload) => {
+                return this.authService.refreshTokens(payload.id, body.refreshToken);
+            }).catch(error => {
+                console.log('REFRESH ERROR: ', error.message);
+                throw new HttpException('Refresh token expired', HttpStatus.BAD_REQUEST);
+            });
+        } else {
+            throw new HttpException('Could not refresh tokens', HttpStatus.BAD_REQUEST);
+        }
     }
+
+    // verify
+    @ApiBearerAuth('JWT')
+    @ApiOperation({
+        summary: ' - verify logged'
+    })
+    @Post('/local/verify')
+    @HttpCode(HttpStatus.OK)
+    verifyToken() {
+        return true;
+    }
+
 
     // FACEBOOK AUTH
     // init facebook login

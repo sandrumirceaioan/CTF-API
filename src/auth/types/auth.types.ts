@@ -57,6 +57,13 @@ export class LoginRequest {
     remember?: boolean;
 }
 
+export class RefreshRequest {
+    @ApiProperty({ example: 'eyJhbGciOiJIUzI1N3453453456IkpXVCJ9.eyJzdWIiOiIxMjM0NTY456456456456ZSI6IkpvaG4gRG9lIiwiaWF0Ijox567675MDIyfQ.SflKxwRJSMeKKF2QT4h6hj8kfg77565676yJV_adQssw5c' })
+    @IsNotEmpty()
+    @IsString()
+    refreshToken: string
+}
+
 export class LoginResponse {
     @ApiProperty()
     user: User;

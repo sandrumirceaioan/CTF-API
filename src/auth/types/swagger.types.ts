@@ -1,5 +1,5 @@
 import { User } from "src/users/users.schema";
-import { LoginRequest, LoginResponse, RegisterRequest, RegisterResponse, ResetPasswordInitRequest, ResetPasswordRequest, ResetResponse } from "./auth.types";
+import { LoginRequest, LoginResponse, RefreshRequest, RegisterRequest, RegisterResponse, ResetPasswordInitRequest, ResetPasswordRequest, ResetResponse } from "./auth.types";
 
 export const authSwagger = {
     login: {
@@ -17,6 +17,14 @@ export const authSwagger = {
         },
         res: {
             type: RegisterResponse
+        }
+    },
+    refresh: {
+        req: {
+            type: RefreshRequest,
+        },
+        res: {
+            type: LoginResponse
         }
     },
     resetinit: {

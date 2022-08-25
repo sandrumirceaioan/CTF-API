@@ -150,7 +150,7 @@ export class AuthService {
 
     async resetPassword(body: ResetPasswordRequest): Promise<any> {
         return new Promise(async (resolve, reject) => {
-            await this.jwtService.verifyAsync(body.token, this.configService.get<any>('AT_SECRET')).then(async (valid) => {
+            await this.jwtService.verifyAsync(body.token, { secret: this.configService.get<any>('AT_SECRET') }).then(async (valid) => {
                 if (valid) {
                     let newPassword = SHA256(body.password, this.configService.get('CRYPTO_KEY')).toString();
                     const updated = await this.usersService.findByIdAndUpdate(valid.id, { atHash: await this.hashData(newPassword) }, { new: true });
