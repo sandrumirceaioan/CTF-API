@@ -45,12 +45,10 @@ export class AuthService {
         // check for user in database using email address provided
         const user = await this.usersService.findOne({ email: body.email });
         if (!user) throw new UnauthorizedException('User not found');
-        console.log('user: ', user);
 
         // compare provided password with user hashed access token 
         const correctPassword = await compareSync(body.password, user.atHash);
         if (!correctPassword) throw new UnauthorizedException('Access denied');
-        console.log('correctPassword: ', correctPassword);
 
         // generate new set of tokens and update user rtHash for following comparations
         const tokens = await this.getTokens(user['_id'].toString(), user.role, user.email, body.remember);
@@ -151,22 +149,18 @@ export class AuthService {
     }
 
     async resetPassword(body: ResetPasswordRequest): Promise<any> {
-        console.log(body.password);
         return new Promise(async (resolve, reject) => {
             await this.jwtService.verifyAsync(body.token, { secret: this.configService.get<any>('RP_SECRET') }).then(async (valid) => {
                 if (valid) {
                     //let newPassword = SHA256(body.password, this.configService.get('CRYPTO_KEY')).toString();
                     let newPassword = await this.hashData(body.password);
-                    console.log('newPassword: ', newPassword);
                     const updated = await this.usersService.findByIdAndUpdate(valid.id, { atHash: newPassword }, { new: true });
                     if (updated) {
-                        console.log('User password updated');
                         // generate one set of tokens - hashed acces token needed for login password comparation
                         const tokens = await this.getTokens(updated['_id'].toString(), updated.role, updated.email);
                         await this.updateRtHash(updated['_id'].toString(), tokens.refresh_token);
                         resolve({ tokens });
                     } else {
-                        console.log('User password NOT updated');
                         reject(new Error('User password NOT updated'))
                     }
                 }

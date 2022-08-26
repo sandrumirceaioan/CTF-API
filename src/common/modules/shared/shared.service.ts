@@ -41,15 +41,10 @@ export class SharedService {
 
 
     public async sendMail(recipient, token): Promise<any> {
-        console.log('MAILGUN: ', this.mailGun);
-        console.log('RECIPIENT: ', recipient);
-        console.log('TOKEN: ', token);
-
         const env = this.configService.get('ENVIRONMENT');
         if (env === 'dev') {
             console.log('DEV ENV');
             console.log(__dirname);
-            // __dirname - C:\Users\sandr\Documents\CTF-API\dist\src\common\modules\shared
             const source = fs.readFileSync(path.resolve(__dirname, '../../../../assets/templates/reset-password.template.hbs'), 'utf8');
             const template = Handlebars.compile(source);
             const resetTemplate = template({
