@@ -45,10 +45,12 @@ export class AuthService {
         // check for user in database using email address provided
         const user = await this.usersService.findOne({ email: body.email });
         if (!user) throw new UnauthorizedException('User not found');
+        console.log('user: ', user);
 
         // compare provided password with user hashed access token 
         const correctPassword = await compareSync(body.password, user.atHash);
         if (!correctPassword) throw new UnauthorizedException('Access denied');
+        console.log('correctPassword: ', correctPassword);
 
         // generate new set of tokens and update user rtHash for following comparations
         const tokens = await this.getTokens(user['_id'].toString(), user.role, user.email, body.remember);
@@ -122,17 +124,17 @@ export class AuthService {
 
     // reset password
     async resetPasswordInit(body: ResetPasswordInitRequest) {
-        console.log(body);
-        let user: User | any = await this.usersService.findOne({ email: body.email }, { select: '_id email' });
-        console.log(user);
+        let user: User | any = await this.usersService.findOne({ email: body.email }, { select: '_id email role' });
         if (user && user._id && user.email) {
-            const payload = {
-                id: user._id,
-                email: user.email
-            };
 
-            const token = await this.jwtService.signAsync(payload, { expiresIn: '5m' });
-            console.log(token);
+            const token = await this.jwtService.signAsync({
+                id: user._id,
+                role: user.role,
+                email: user.email,
+            }, {
+                secret: this.configService.get<string>('RP_SECRET'),
+                expiresIn: '5m'
+            });
 
             if (!token) throw new HttpException('Could not generate reset token', HttpStatus.INTERNAL_SERVER_ERROR);
 
@@ -149,17 +151,24 @@ export class AuthService {
     }
 
     async resetPassword(body: ResetPasswordRequest): Promise<any> {
+        console.log(body.password);
         return new Promise(async (resolve, reject) => {
-            await this.jwtService.verifyAsync(body.token, { secret: this.configService.get<any>('AT_SECRET') }).then(async (valid) => {
+            await this.jwtService.verifyAsync(body.token, { secret: this.configService.get<any>('RP_SECRET') }).then(async (valid) => {
                 if (valid) {
-                    let newPassword = SHA256(body.password, this.configService.get('CRYPTO_KEY')).toString();
-                    const updated = await this.usersService.findByIdAndUpdate(valid.id, { atHash: await this.hashData(newPassword) }, { new: true });
+                    //let newPassword = SHA256(body.password, this.configService.get('CRYPTO_KEY')).toString();
+                    let newPassword = await this.hashData(body.password);
+                    console.log('newPassword: ', newPassword);
+                    const updated = await this.usersService.findByIdAndUpdate(valid.id, { atHash: newPassword }, { new: true });
                     if (updated) {
                         console.log('User password updated');
+                        // generate one set of tokens - hashed acces token needed for login password comparation
+                        const tokens = await this.getTokens(updated['_id'].toString(), updated.role, updated.email);
+                        await this.updateRtHash(updated['_id'].toString(), tokens.refresh_token);
+                        resolve({ tokens });
                     } else {
                         console.log('User password NOT updated');
+                        reject(new Error('User password NOT updated'))
                     }
-                    resolve(true);
                 }
             }).catch(error => {
                 reject(new Error('Token invalid'));

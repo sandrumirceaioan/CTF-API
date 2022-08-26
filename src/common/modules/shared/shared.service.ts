@@ -48,7 +48,9 @@ export class SharedService {
         const env = this.configService.get('ENVIRONMENT');
         if (env === 'dev') {
             console.log('DEV ENV');
-            const source = fs.readFileSync(path.resolve(__dirname, '../../../assets/templates/reset-password.template.hbs'), 'utf8');
+            console.log(__dirname);
+            // __dirname - C:\Users\sandr\Documents\CTF-API\dist\src\common\modules\shared
+            const source = fs.readFileSync(path.resolve(__dirname, '../../../../assets/templates/reset-password.template.hbs'), 'utf8');
             const template = Handlebars.compile(source);
             const resetTemplate = template({
                 "logoImg": `${this.configService.get('API_URL')}/ctf-logo-white-medium.png`,
