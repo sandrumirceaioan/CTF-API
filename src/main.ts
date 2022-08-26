@@ -7,8 +7,6 @@ import { ConfigService } from '@nestjs/config';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { AllExceptionsFilter } from './common/filters/all-exception.filter';
 import { ValidationPipe } from '@nestjs/common';
-import { RtGuard } from './common/guards/jwt-rt.guard';
-import { RtStrategy } from './auth/strategies/rt.strategy';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
