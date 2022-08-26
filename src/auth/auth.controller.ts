@@ -51,6 +51,8 @@ export class AuthController {
         return await this.authService.localLogin(body);
     }
 
+    // logout
+    @ApiBearerAuth('JWT')
     @ApiOperation({
         summary: ' - logout user'
     })
@@ -61,7 +63,7 @@ export class AuthController {
 
     // refresh
     @Public()
-    // @ApiExcludeEndpoint()
+    @ApiBearerAuth('JWT')
     @ApiBody(authSwagger.refresh.req)
     @ApiResponse(authSwagger.refresh.res)
     @ApiOperation({
@@ -127,6 +129,7 @@ export class AuthController {
     // *** LOCAL AUTH *** //
 
     // init facebook login
+    @ApiExcludeEndpoint()
     @Public()
     @Get('/facebook')
     @UseGuards(AuthGuard("facebook"))
@@ -135,6 +138,7 @@ export class AuthController {
     }
 
     // postback facebook login
+    @ApiExcludeEndpoint()
     @Public()
     @Get('/facebook/redirect')
     @UseGuards(AuthGuard('facebook'))
