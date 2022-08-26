@@ -30,7 +30,7 @@ export class AuthController {
     @ApiBody(authSwagger.register.req)
     @ApiResponse(authSwagger.register.res)
     @ApiOperation({
-        summary: ' - register user account'
+        summary: ' - register user'
     })
     @HttpCode(HttpStatus.CREATED)
     @Post('/local/register')
@@ -65,7 +65,7 @@ export class AuthController {
     @ApiBody(authSwagger.refresh.req)
     @ApiResponse(authSwagger.refresh.res)
     @ApiOperation({
-        summary: ' - refresh token'
+        summary: ' - refresh user'
     })
     @Post('/local/refresh')
     @HttpCode(HttpStatus.OK)
@@ -87,7 +87,7 @@ export class AuthController {
     // verify
     @ApiBearerAuth('JWT')
     @ApiOperation({
-        summary: ' - verify logged'
+        summary: ' - verify user'
     })
     @Post('/local/verify')
     @HttpCode(HttpStatus.OK)
@@ -100,9 +100,9 @@ export class AuthController {
     @ApiBody(authSwagger.resetinit.req)
     @ApiResponse(authSwagger.resetinit.res)
     @ApiOperation({
-        summary: ' - reset password init'
+        summary: ' - reset user password init'
     })
-    @Post('/reset-password-init')
+    @Post('/local/reset-init')
     async resetInit(
         @Body() body: ResetPasswordInitRequest
     ) {
@@ -114,9 +114,9 @@ export class AuthController {
     @ApiBody(authSwagger.reset.req)
     @ApiResponse(authSwagger.reset.res)
     @ApiOperation({
-        summary: ' - reset password'
+        summary: ' - reset user password complete'
     })
-    @Post('/reset-password')
+    @Post('/local/reset-complete')
     async reset(
         @Body() body: ResetPasswordRequest
     ) {
