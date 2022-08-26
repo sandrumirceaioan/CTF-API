@@ -5,7 +5,7 @@ import { User } from '../users/users.schema';
 import { SHA256 } from 'crypto-js';
 import { LoginRequest, LoginResponse, RegisterRequest, RegisterResponse, ResetPasswordInitRequest, ResetPasswordRequest } from './types/auth.types';
 import { ConfigService } from '@nestjs/config';
-import { SharedService } from 'src/common/modules/shared/shared.service';
+import { SharedService } from '../common/modules/shared/shared.service';
 import { hash, compareSync } from 'bcrypt';
 import { Tokens } from './types/token.types';
 

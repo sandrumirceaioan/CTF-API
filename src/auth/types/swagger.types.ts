@@ -1,4 +1,4 @@
-import { User } from "src/users/users.schema";
+import { User } from "../../users/users.schema";
 import { LoginRequest, LoginResponse, RefreshRequest, RegisterRequest, RegisterResponse, ResetPasswordInitRequest, ResetPasswordRequest, ResetResponse } from "./auth.types";
 
 export const authSwagger = {

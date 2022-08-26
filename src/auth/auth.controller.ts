@@ -10,7 +10,7 @@ import { authSwagger } from './types/swagger.types';
 import { LoginRequest, LoginResponse, RegisterRequest, RegisterResponse, ResetPasswordInitRequest, ResetPasswordRequest } from './types/auth.types';
 import { JwtPayload } from './types/jwt-payload.types';
 import { JwtService } from '@nestjs/jwt';
-import { GetCurrentUserId } from 'src/common/decorators/current-user-id.decorator';
+import { GetCurrentUserId } from '../common/decorators/current-user-id.decorator';
 import { ConfigService } from '@nestjs/config';
 
 @ApiTags('Auth')
