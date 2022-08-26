@@ -10,9 +10,7 @@ import { authSwagger } from './types/swagger.types';
 import { LoginRequest, LoginResponse, RegisterRequest, RegisterResponse, ResetPasswordInitRequest, ResetPasswordRequest } from './types/auth.types';
 import { JwtPayload } from './types/jwt-payload.types';
 import { JwtService } from '@nestjs/jwt';
-import { RtGuard } from 'src/common/guards/jwt-rt.guard';
 import { GetCurrentUserId } from 'src/common/decorators/current-user-id.decorator';
-import { GetCurrentUser } from 'src/common/decorators/current-user.decorator';
 import { ConfigService } from '@nestjs/config';
 
 @ApiTags('Auth')
@@ -97,8 +95,37 @@ export class AuthController {
         return true;
     }
 
+    // reset init
+    @Public()
+    @ApiBody(authSwagger.resetinit.req)
+    @ApiResponse(authSwagger.resetinit.res)
+    @ApiOperation({
+        summary: ' - reset password init'
+    })
+    @Post('/reset-password-init')
+    async resetInit(
+        @Body() body: ResetPasswordInitRequest
+    ) {
+        return await this.authService.resetPasswordInit(body);
+    }
 
-    // FACEBOOK AUTH
+    // reset complete
+    @Public()
+    @ApiBody(authSwagger.reset.req)
+    @ApiResponse(authSwagger.reset.res)
+    @ApiOperation({
+        summary: ' - reset password'
+    })
+    @Post('/reset-password')
+    async reset(
+        @Body() body: ResetPasswordRequest
+    ) {
+        return await this.authService.resetPassword(body);
+    }
+
+    
+    // *** LOCAL AUTH *** //
+
     // init facebook login
     @Public()
     @Get('/facebook')
@@ -117,52 +144,6 @@ export class AuthController {
             data: req.user,
         };
     }
-
-    // reset password init
-    @Public()
-    @ApiBody(authSwagger.resetinit.req)
-    @ApiResponse(authSwagger.resetinit.res)
-    @ApiOperation({
-        summary: ' - reset password init'
-    })
-    @Post('/reset-password-init')
-    async resetInit(
-        @Body() body: ResetPasswordInitRequest
-    ) {
-        return await this.authService.resetPasswordInit(body);
-    }
-
-    // reset password
-    @Public()
-    @ApiBody(authSwagger.reset.req)
-    @ApiResponse(authSwagger.reset.res)
-    @ApiOperation({
-        summary: ' - reset password'
-    })
-    @Post('/reset-password')
-    async reset(
-        @Body() body: ResetPasswordRequest
-    ) {
-        return await this.authService.resetPassword(body);
-    }
-
-    // // verify
-    // @ApiBearerAuth('JWT')
-    // @ApiHeader({
-    //     name: 'Token',
-    //     required: true,
-    // })
-    // @ApiResponse(authSwagger.verify.res)
-    // @ApiOperation({
-    //     summary: ' - verify token',
-    //     description: '<b>NOTE</b>: When used from Swagger it uses the header <i>Token</i> provided below. When used from web app it uses the header <i>Authorization</i>.'
-    // })
-    // @Get('/verify')
-    // async verify(
-    //     @Headers() headers: any,
-    // ) {
-    //     return await this.authService.verify(headers);
-    // }
 
 }
 

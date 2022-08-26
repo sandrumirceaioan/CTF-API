@@ -41,14 +41,11 @@ export class SharedService {
 
 
     public async sendMail(recipient, token): Promise<any> {
-        console.log('MAILGUN: ', this.mailGun);
-        console.log('RECIPIENT: ', recipient);
-        console.log('TOKEN: ', token);
-
         const env = this.configService.get('ENVIRONMENT');
         if (env === 'dev') {
             console.log('DEV ENV');
-            const source = fs.readFileSync(path.resolve(__dirname, '../../../assets/templates/reset-password.template.hbs'), 'utf8');
+            console.log(__dirname);
+            const source = fs.readFileSync(path.resolve(__dirname, '../../../../assets/templates/reset-password.template.hbs'), 'utf8');
             const template = Handlebars.compile(source);
             const resetTemplate = template({
                 "logoImg": `${this.configService.get('API_URL')}/ctf-logo-white-medium.png`,
