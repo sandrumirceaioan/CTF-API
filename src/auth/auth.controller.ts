@@ -1,5 +1,5 @@
-import { Body, Controller, Get, HttpException, HttpStatus, Post, Req, SetMetadata, UseGuards, Header, Param, Head, Headers, Query, HttpCode } from '@nestjs/common';
-import { ApiBody, ApiOperation, ApiResponse, ApiTags, ApiUnauthorizedResponse, ApiHeader, ApiParam, ApiBearerAuth, ApiHeaders, ApiQuery, ApiHideProperty, ApiExcludeEndpoint } from "@nestjs/swagger";
+import { Body, Controller, Get, HttpException, HttpStatus, Post, Req, UseGuards, HttpCode } from '@nestjs/common';
+import { ApiBody, ApiOperation, ApiResponse, ApiTags, ApiBearerAuth, ApiExcludeEndpoint } from "@nestjs/swagger";
 
 import { Public } from '../common/decorators/public.decorators';
 import { AuthService } from './auth.service';
@@ -12,12 +12,14 @@ import { JwtPayload } from './types/jwt-payload.types';
 import { JwtService } from '@nestjs/jwt';
 import { GetCurrentUserId } from '../common/decorators/current-user-id.decorator';
 import { ConfigService } from '@nestjs/config';
+import { UsersService } from '../users/users.service';
 
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
     constructor(
         private authService: AuthService,
+        private usersService: UsersService,
         private configService: ConfigService,
         private jwtService: JwtService
     ) {
@@ -93,8 +95,10 @@ export class AuthController {
     })
     @Post('/local/verify')
     @HttpCode(HttpStatus.OK)
-    verifyToken() {
-        return true;
+    async verifyToken(
+        @GetCurrentUserId() userId: string
+    ) {
+        return await this.usersService.findById(userId);
     }
 
     // reset init

@@ -10,6 +10,7 @@ import { UsersModule } from './users/users.module';
 import { AtGuard } from './common/guards/jwt-at.guard';
 import { RolesGuard } from './common/guards/role.guard';
 import { FacebookStrategy } from './auth/strategies/fb.strategy';
+import { CategoriesModule } from './categories/categories.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { FacebookStrategy } from './auth/strategies/fb.strategy';
     SharedModule,
     AuthModule,
     UsersModule,
+    CategoriesModule,
   ],
   controllers: [AppController],
   providers: [
