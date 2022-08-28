@@ -1,11 +1,9 @@
 import { Controller, Get, Query, SetMetadata, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
-import { AuthGuard } from '@nestjs/passport';
 import { UsersService } from './users.service';
 
 @ApiTags('User Module Api')
 @ApiBearerAuth('JWT')
-@UseGuards(AuthGuard('jwt'))
 @SetMetadata('roles', 'admin')
 @Controller('users')
 
