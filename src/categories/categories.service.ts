@@ -4,7 +4,7 @@ import { Model } from 'mongoose';
 import { Category, CategoryDocument } from './categories.schema';
 import { SharedService } from '../common/modules/shared/shared.service';
 import { pick } from 'lodash';
-import { CreateCategoryDto } from './categories.types';
+import { CreateCategory } from './categories.types';
 
 @Injectable()
 export class CategoriesService {
@@ -60,7 +60,7 @@ export class CategoriesService {
 
     // CUSTOM METHODS
 
-    async createCategory(body: CreateCategoryDto, userId: string): Promise<Category> {
+    async createCategory(body: CreateCategory, userId: string): Promise<Category> {
         const parent = await this.findById(body.parent, { select: '_id' });
         if (!parent) throw new HttpException('Parent category not found', HttpStatus.BAD_REQUEST);
 
