@@ -42,8 +42,7 @@ async function bootstrap() {
     optionsSuccessStatus: 204,
   });
 
-  const imagesPath = join(__dirname + '/assets/images');
-  app.useStaticAssets(imagesPath);
+  app.useStaticAssets(join(__dirname, '../assets/thumbnails'), { prefix: '/thumbnails'});
 
   const port = config.get('PORT');
   await app.listen(port || 3000);

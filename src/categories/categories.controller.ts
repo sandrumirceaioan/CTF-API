@@ -9,6 +9,7 @@ import { CategoriesService } from './categories.service';
 import { categoriesSwagger } from './swagger.types';
 import { FileFieldsInterceptor, FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
+import { ConfigService } from '@nestjs/config';
 
 @ApiTags('Categories Module Api')
 @ApiBearerAuth('JWT')
@@ -16,10 +17,14 @@ import { diskStorage } from 'multer';
 @Controller('categories')
 
 export class CategoriesController {
+    apiUrl: string;
 
     constructor(
-        private categoriesService: CategoriesService
-    ) { }
+        private categoriesService: CategoriesService,
+        private configService: ConfigService
+    ) {
+        this.apiUrl = this.configService.get('API_URL');
+    }
 
     @ApiBody(categoriesSwagger.create.req)
     @ApiResponse(categoriesSwagger.create.res)
@@ -70,16 +75,23 @@ export class CategoriesController {
 
         return {
             count: await this.categoriesService.count(query),
-            categories: await this.categoriesService.find(query, options)
+            categories: (await this.categoriesService.find(query, options)).map((category: Category) => {
+                if (category.thumbnail) {
+                    category.thumbnail = `${this.apiUrl}/thumbnails/${category.thumbnail}`;
+                }
+                return category;
+            })
         }
     }
 
     @ApiResponse(categoriesSwagger.one.res)
     @Get('/:id')
-    getCostByID(
+    async getCostByID(
         @Param('id') id: string
     ) {
-        return this.categoriesService.findById(id);
+        let category = await this.categoriesService.findById(id);
+        category['thumbnail'] = `${this.apiUrl}/thumbnails/${category.thumbnail}`;
+        return category;
     }
 
 
